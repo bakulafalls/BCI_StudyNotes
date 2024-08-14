@@ -1,0 +1,29 @@
+
+params:
+  {
+    'ch':1,             # 输入神经网络的feature map的数量
+    'C':22,             # EEG 脑电信号的通道
+    'num_class':4,      # 分类的类别
+    'F1':8,             # EEGNet论文里block1中的F1参数
+    'F2':32,            # EEGNet论文里block2中的F2参数
+    'D':4               # EEGNet论文里block1中的D参数
+  }
+
+backbon:
+  # 每一层是一个
+  [[-1,conv,[F1[1,128],1,same,False]],  # 普通二维卷积
+  
+   [-1,DepthConv,[[D,F1],[22,1],1,valid,False]],  # 深度卷积层作空间卷积
+   [-1,Activation,[ELU]], 
+   [-1,Pool,[AVG,[1,4]]],  # 平均池化
+   [-1,Dropout,[0.25]],  # 丢弃层，0.25丢弃率（不跨被试），跨被试则用0.5
+
+   [-1,SeparableConv,[F2,[1,64],1,same,False]],  # 深度可分离卷积
+   [-1,Activation,[ELU]],
+   [-1,Pool,[AVG,[1,8]]],
+   [-1,Dropout,[0.25]],
+
+   [-1.FL.[-1]],
+   [2592,FC,[num_class, False]],
+   [-1,SoftMax,[1]]  # 激活
+  ]
